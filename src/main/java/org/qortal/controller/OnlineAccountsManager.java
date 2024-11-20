@@ -80,7 +80,7 @@ public class OnlineAccountsManager {
     // IMPORTANT: if we ever need to dynamically modify the buffer size using a feature trigger, the
     // pre-allocated buffer below will NOT work, and we should instead use a dynamically allocated
     // one for the transition period.
-    private static final long[] POW_VERIFY_WORK_BUFFER = new long[getPoWBufferSize() / 8];
+    private static long[] POW_VERIFY_WORK_BUFFER = new long[getPoWBufferSize() / 8];
 
     private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(4, new NamedThreadFactory("OnlineAccounts"));
     private volatile boolean isStopping = false;
@@ -292,10 +292,13 @@ public class OnlineAccountsManager {
             return false;
         }
 
-        // Existing data has no usable nonce value(s) so we want to replace it with the new one
-        return existingOnlineAccountData.getNonce() == null || existingOnlineAccountData.getNonce() < 0;
+        if (existingOnlineAccountData.getNonce() == null || existingOnlineAccountData.getNonce() < 0) {
+            // Existing data has no usable nonce value(s) so we want to replace it with the new one
+            return true;
+        }
 
         // Both new and old data have nonce values so the new data isn't considered superior
+        return false;
     }
 
 
@@ -422,7 +425,7 @@ public class OnlineAccountsManager {
         boolean isSuperiorEntry = isOnlineAccountsDataSuperior(onlineAccountData);
         if (isSuperiorEntry)
             // Remove existing inferior entry so it can be re-added below (it's likely the existing copy is missing a nonce value)
-            onlineAccounts.removeIf(a -> Arrays.equals(a.getPublicKey(), onlineAccountData.getPublicKey()));
+            onlineAccounts.removeIf(a -> Objects.equals(a.getPublicKey(), onlineAccountData.getPublicKey()));
 
         boolean isNewEntry = onlineAccounts.add(onlineAccountData);
 
@@ -593,7 +596,7 @@ public class OnlineAccountsManager {
                         return false;
                     }
                 } catch (TimeoutException e) {
-                    LOGGER.info(String.format("Timed out computing nonce for account %.8s", Base58.encode(publicKey)));
+                    LOGGER.info("Timed out computing nonce for account %.8s", Base58.encode(publicKey));
                     return false;
                 }
 
@@ -640,7 +643,7 @@ public class OnlineAccountsManager {
     }
 
     private Integer computeMemoryPoW(byte[] bytes, byte[] publicKey, long onlineAccountsTimestamp) throws TimeoutException {
-        LOGGER.info(String.format("Computing nonce for account %.8s and timestamp %d...", Base58.encode(publicKey), onlineAccountsTimestamp));
+        LOGGER.info("Computing nonce for account %.8s and timestamp %d...", Base58.encode(publicKey), onlineAccountsTimestamp);
 
         // Calculate the time until the next online timestamp and use it as a timeout when computing the nonce
         Long startTime = NTP.getTime();
@@ -655,9 +658,9 @@ public class OnlineAccountsManager {
         int seconds = (int) (totalSeconds % 60);
         double hashRate = nonce / totalSeconds;
 
-        LOGGER.info(String.format("Computed nonce for timestamp %d and account %.8s: %d. Buffer size: %d. Difficulty: %d. " +
+        LOGGER.info("Computed nonce for timestamp %d and account %.8s: %d. Buffer size: %d. Difficulty: %d. " +
                         "Time taken: %02d:%02d. Hashrate: %f", onlineAccountsTimestamp, Base58.encode(publicKey),
-                nonce, getPoWBufferSize(), difficulty, minutes, seconds, hashRate));
+                nonce, getPoWBufferSize(), difficulty, minutes, seconds, hashRate);
 
         return nonce;
     }
@@ -716,7 +719,7 @@ public class OnlineAccountsManager {
      */
     // Block::mint() - only wants online accounts with (online) timestamp that matches block's (online) timestamp so they can be added to new block
     public List<OnlineAccountData> getOnlineAccounts(long onlineTimestamp) {
-        LOGGER.debug(String.format("caller's timestamp: %d, our timestamps: %s", onlineTimestamp, String.join(", ", this.currentOnlineAccounts.keySet().stream().map(l -> Long.toString(l)).collect(Collectors.joining(", ")))));
+        LOGGER.debug("caller's timestamp: %d, our timestamps: %s", onlineTimestamp, String.join(", ", this.currentOnlineAccounts.keySet().stream().map(l -> Long.toString(l)).collect(Collectors.joining(", "))));
 
         return new ArrayList<>(Set.copyOf(this.currentOnlineAccounts.getOrDefault(onlineTimestamp, Collections.emptySet())));
     }
@@ -838,10 +841,10 @@ public class OnlineAccountsManager {
                         .forEach(outgoingOnlineAccounts::add);
 
                 if (outgoingOnlineAccounts.size() > beforeAddSize)
-                    LOGGER.trace(String.format("Going to send %d online accounts for timestamp %d and leading bytes %s",
-                            outgoingOnlineAccounts.size() - beforeAddSize,
-                            timestamp,
-                            outgoingLeadingBytes.stream().sorted(Byte::compareUnsigned).map(leadingByte -> String.format("%02x", leadingByte)).collect(Collectors.joining(", "))
+                    LOGGER.trace("Going to send %d online accounts for timestamp %d and leading bytes %s",
+                                    outgoingOnlineAccounts.size() - beforeAddSize,
+                                    timestamp,
+                                    outgoingLeadingBytes.stream().sorted(Byte::compareUnsigned).map(leadingByte -> String.format("%02x", leadingByte)).collect(Collectors.joining(", ")
                             )
                     );
             }
