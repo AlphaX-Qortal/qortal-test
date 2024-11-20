@@ -411,7 +411,7 @@ public class OnlineAccountsManager {
             }
         }
 
-        LOGGER.trace("we have online accounts for timestamps: {}", String.join(", ", this.currentOnlineAccounts.keySet().stream().map(l -> Long.toString(l)).collect(Collectors.joining(", "))));
+        LOGGER.trace(String.format("we have online accounts for timestamps: {}", String.join(", ", this.currentOnlineAccounts.keySet().stream().map(l -> Long.toString(l)).collect(Collectors.joining(", ")))));
 
         return true;
     }
@@ -596,7 +596,7 @@ public class OnlineAccountsManager {
                         return false;
                     }
                 } catch (TimeoutException e) {
-                    LOGGER.info("Timed out computing nonce for account %.8s", Base58.encode(publicKey));
+                    LOGGER.info(String.format("Timed out computing nonce for account %.8s", Base58.encode(publicKey)));
                     return false;
                 }
 
@@ -643,7 +643,7 @@ public class OnlineAccountsManager {
     }
 
     private Integer computeMemoryPoW(byte[] bytes, byte[] publicKey, long onlineAccountsTimestamp) throws TimeoutException {
-        LOGGER.info("Computing nonce for account %.8s and timestamp %d...", Base58.encode(publicKey), onlineAccountsTimestamp);
+        LOGGER.info(String.format("Computing nonce for account %.8s and timestamp %d...", Base58.encode(publicKey), onlineAccountsTimestamp));
 
         // Calculate the time until the next online timestamp and use it as a timeout when computing the nonce
         Long startTime = NTP.getTime();
@@ -658,9 +658,9 @@ public class OnlineAccountsManager {
         int seconds = (int) (totalSeconds % 60);
         double hashRate = nonce / totalSeconds;
 
-        LOGGER.info("Computed nonce for timestamp %d and account %.8s: %d. Buffer size: %d. Difficulty: %d. " +
+        LOGGER.info(String.format("Computed nonce for timestamp %d and account %.8s: %d. Buffer size: %d. Difficulty: %d. " +
                         "Time taken: %02d:%02d. Hashrate: %f", onlineAccountsTimestamp, Base58.encode(publicKey),
-                nonce, getPoWBufferSize(), difficulty, minutes, seconds, hashRate);
+                nonce, getPoWBufferSize(), difficulty, minutes, seconds, hashRate));
 
         return nonce;
     }
@@ -719,7 +719,7 @@ public class OnlineAccountsManager {
      */
     // Block::mint() - only wants online accounts with (online) timestamp that matches block's (online) timestamp so they can be added to new block
     public List<OnlineAccountData> getOnlineAccounts(long onlineTimestamp) {
-        LOGGER.debug("caller's timestamp: %d, our timestamps: %s", onlineTimestamp, String.join(", ", this.currentOnlineAccounts.keySet().stream().map(l -> Long.toString(l)).collect(Collectors.joining(", "))));
+        LOGGER.debug(String.format("caller's timestamp: %d, our timestamps: %s", onlineTimestamp, String.join(", ", this.currentOnlineAccounts.keySet().stream().map(l -> Long.toString(l)).collect(Collectors.joining(", ")))));
 
         return new ArrayList<>(Set.copyOf(this.currentOnlineAccounts.getOrDefault(onlineTimestamp, Collections.emptySet())));
     }
@@ -841,25 +841,25 @@ public class OnlineAccountsManager {
                         .forEach(outgoingOnlineAccounts::add);
 
                 if (outgoingOnlineAccounts.size() > beforeAddSize)
-                    LOGGER.trace("Going to send %d online accounts for timestamp %d and leading bytes %s",
+                    LOGGER.debug(String.format("Going to send %d online accounts for timestamp %d and leading bytes %s",
                                     outgoingOnlineAccounts.size() - beforeAddSize,
                                     timestamp,
                                     outgoingLeadingBytes.stream().sorted(Byte::compareUnsigned).map(leadingByte -> String.format("%02x", leadingByte)).collect(Collectors.joining(", ")
                             )
-                    );
+                    ));
             }
         }
 
         peer.sendMessage(new OnlineAccountsV3Message(outgoingOnlineAccounts));
 
-        LOGGER.trace("Sent {} online accounts to {}", outgoingOnlineAccounts.size(), peer);
+        LOGGER.debug("Sent {} online accounts to {}", outgoingOnlineAccounts.size(), peer);
     }
 
     public void onNetworkOnlineAccountsV3Message(Peer peer, Message message) {
         OnlineAccountsV3Message onlineAccountsMessage = (OnlineAccountsV3Message) message;
 
         List<OnlineAccountData> peersOnlineAccounts = onlineAccountsMessage.getOnlineAccounts();
-        LOGGER.trace("Received {} online accounts from {}", peersOnlineAccounts.size(), peer);
+        LOGGER.debug("Received {} online accounts from {}", peersOnlineAccounts.size(), peer);
 
         int importCount = 0;
 
