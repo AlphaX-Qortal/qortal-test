@@ -113,7 +113,7 @@ public class Peer {
 
 
     /* Pending signature requests */
-    private List<byte[]> pendingSignatureRequests = Collections.synchronizedList(new ArrayList<>());
+    private final List<byte[]> pendingSignatureRequests = Collections.synchronizedList(new ArrayList<>());
 
 
     // Versioning
@@ -128,7 +128,7 @@ public class Peer {
     private byte[] peersPublicKey;
     private byte[] peersChallenge;
 
-    private PeerData peerData = null;
+    private final PeerData peerData;
 
     /**
      * Peer's value of connectionTimestamp.
@@ -417,13 +417,7 @@ public class Peer {
     }
 
     public void removePendingSignatureRequest(byte[] signature) {
-        Iterator iterator = this.pendingSignatureRequests.iterator();
-        while (iterator.hasNext()) {
-            byte[] existingSignature = (byte[]) iterator.next();
-            if (Arrays.equals(existingSignature, signature)) {
-                iterator.remove();
-            }
-        }
+        this.pendingSignatureRequests.removeIf(existingSignature -> Arrays.equals(existingSignature, signature));
     }
 
     public List<byte[]> getPendingSignatureRequests() {
@@ -934,10 +928,7 @@ public class Peer {
         if (commonBlockChainTipData == null || commonBlockChainTipData.getSignature() == null)
             return false;
 
-        if (!Arrays.equals(peerChainTipData.getSignature(), commonBlockChainTipData.getSignature()))
-            return false;
-
-        return true;
+        return Arrays.equals(peerChainTipData.getSignature(), commonBlockChainTipData.getSignature());
     }
 
 

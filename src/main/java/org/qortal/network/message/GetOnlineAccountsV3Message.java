@@ -2,6 +2,7 @@ package org.qortal.network.message;
 
 import com.google.common.primitives.Longs;
 import org.qortal.transform.Transformer;
+import org.qortal.utils.Serialization;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -99,8 +100,7 @@ public class GetOnlineAccountsV3Message extends Message {
 			Map<Byte, byte[]> hashesByByte = new HashMap<>();
 
 			for (int i = 0; i < hashCount; ++i) {
-				byte[] publicKeyHash = new byte[Transformer.PUBLIC_KEY_LENGTH];
-				bytes.get(publicKeyHash);
+                byte[] publicKeyHash = Serialization.deserializePublicKey(bytes);
 
 				hashesByByte.put(publicKeyHash[0], publicKeyHash);
 			}

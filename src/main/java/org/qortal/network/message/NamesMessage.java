@@ -29,38 +29,36 @@ public class NamesMessage extends Message {
 		try {
 			bytes.write(Ints.toByteArray(nameDataList.size()));
 
-			for (int i = 0; i < nameDataList.size(); ++i) {
-				NameData nameData = nameDataList.get(i);
+            for (NameData nameData : nameDataList) {
+                Serialization.serializeSizedStringV2(bytes, nameData.getName());
 
-				Serialization.serializeSizedStringV2(bytes, nameData.getName());
+                Serialization.serializeSizedStringV2(bytes, nameData.getReducedName());
 
-				Serialization.serializeSizedStringV2(bytes, nameData.getReducedName());
+                Serialization.serializeAddress(bytes, nameData.getOwner());
 
-				Serialization.serializeAddress(bytes, nameData.getOwner());
+                Serialization.serializeSizedStringV2(bytes, nameData.getData());
 
-				Serialization.serializeSizedStringV2(bytes, nameData.getData());
+                bytes.write(Longs.toByteArray(nameData.getRegistered()));
 
-				bytes.write(Longs.toByteArray(nameData.getRegistered()));
+                Long updated = nameData.getUpdated();
+                int wasUpdated = (updated != null) ? 1 : 0;
+                bytes.write(Ints.toByteArray(wasUpdated));
 
-				Long updated = nameData.getUpdated();
-				int wasUpdated = (updated != null) ? 1 : 0;
-				bytes.write(Ints.toByteArray(wasUpdated));
+                if (updated != null) {
+                    bytes.write(Longs.toByteArray(nameData.getUpdated()));
+                }
 
-				if (updated != null) {
-					bytes.write(Longs.toByteArray(nameData.getUpdated()));
-				}
+                int isForSale = nameData.isForSale() ? 1 : 0;
+                bytes.write(Ints.toByteArray(isForSale));
 
-				int isForSale = nameData.isForSale() ? 1 : 0;
-				bytes.write(Ints.toByteArray(isForSale));
+                if (nameData.isForSale()) {
+                    bytes.write(Longs.toByteArray(nameData.getSalePrice()));
+                }
 
-				if (nameData.isForSale()) {
-					bytes.write(Longs.toByteArray(nameData.getSalePrice()));
-				}
+                bytes.write(nameData.getReference());
 
-				bytes.write(nameData.getReference());
-
-				bytes.write(Ints.toByteArray(nameData.getCreationGroupId()));
-			}
+                bytes.write(Ints.toByteArray(nameData.getCreationGroupId()));
+            }
 
 		} catch (IOException e) {
 			throw new AssertionError("IOException shouldn't occur with ByteArrayOutputStream");

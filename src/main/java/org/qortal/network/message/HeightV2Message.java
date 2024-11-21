@@ -4,6 +4,7 @@ import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import org.qortal.transform.Transformer;
 import org.qortal.transform.block.BlockTransformer;
+import org.qortal.utils.Serialization;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -70,8 +71,7 @@ public class HeightV2Message extends Message {
 
 		long timestamp = bytes.getLong();
 
-		byte[] minterPublicKey = new byte[Transformer.PUBLIC_KEY_LENGTH];
-		bytes.get(minterPublicKey);
+        byte[] minterPublicKey = Serialization.deserializePublicKey(bytes);
 
 		return new HeightV2Message(id, height, signature, timestamp, minterPublicKey);
 	}

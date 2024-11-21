@@ -205,6 +205,8 @@ public class Settings {
 	private int maxPeers = 64;
 	/** Number of slots to reserve for short-lived QDN data transfers */
 	private int maxDataPeers = 5;
+	/** Maximum number of cores for network engine. */
+	private int networkCorePoolSize = 1;
 	/** Maximum number of threads for network engine. */
 	private int maxNetworkThreadPoolSize = 512;
 	/** Maximum number of threads for network proof-of-work compute, used during handshaking. */
@@ -810,6 +812,10 @@ public class Settings {
 
 	public int getMaxDataPeers() {
 		return this.maxDataPeers;
+	}
+
+	public int getNetworkCorePoolSize() {
+		return this.networkCorePoolSize;
 	}
 
 	public int getMaxNetworkThreadPoolSize() {

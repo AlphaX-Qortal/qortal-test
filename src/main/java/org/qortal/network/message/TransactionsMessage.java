@@ -24,12 +24,10 @@ public class TransactionsMessage extends Message {
 		try {
 			bytes.write(Ints.toByteArray(transactions.size()));
 
-			for (int i = 0; i < transactions.size(); ++i) {
-				TransactionData transactionData = transactions.get(i);
-
-				byte[] serializedTransactionData = TransactionTransformer.toBytes(transactionData);
-				bytes.write(serializedTransactionData);
-			}
+            for (TransactionData transactionData : transactions) {
+                byte[] serializedTransactionData = TransactionTransformer.toBytes(transactionData);
+                bytes.write(serializedTransactionData);
+            }
 
 		} catch (IOException e) {
 			throw new AssertionError("IOException shouldn't occur with ByteArrayOutputStream");

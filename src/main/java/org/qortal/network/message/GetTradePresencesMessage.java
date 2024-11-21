@@ -4,6 +4,7 @@ import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import org.qortal.data.network.TradePresenceData;
 import org.qortal.transform.Transformer;
+import org.qortal.utils.Serialization;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -83,8 +84,7 @@ public class GetTradePresencesMessage extends Message {
 			long timestamp = bytes.getLong();
 
 			for (int i = 0; i < groupedEntriesCount; ++i) {
-				byte[] publicKey = new byte[Transformer.PUBLIC_KEY_LENGTH];
-				bytes.get(publicKey);
+                byte[] publicKey = Serialization.deserializePublicKey(bytes);
 
 				tradePresences.add(new TradePresenceData(timestamp, publicKey));
 			}

@@ -99,7 +99,7 @@ public class Controller extends Thread {
 	private final long buildTimestamp; // seconds
 	private final String[] savedArgs;
 
-	private ExecutorService callbackExecutor = Executors.newFixedThreadPool(4);
+	private final ExecutorService callbackExecutor = Executors.newFixedThreadPool(6);
 	private volatile boolean notifyGroupMembershipChange = false;
 
 	/** Latest blocks on our chain. Note: tail/last is the latest block. */
@@ -497,13 +497,10 @@ public class Controller extends Thread {
 			return; // Not System.exit() so that GUI can display error
 		}
 
-		Runtime.getRuntime().addShutdownHook(new Thread() {
-			@Override
-			public void run() {
-				Thread.currentThread().setName("Shutdown hook");
-				Controller.getInstance().shutdown();
-			}
-		});
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            Thread.currentThread().setName("Shutdown hook");
+            Controller.getInstance().shutdown();
+        }));
 
 		LOGGER.info("Starting synchronizer");
 		Synchronizer.getInstance().start();
@@ -638,9 +635,9 @@ public class Controller extends Thread {
 			public void run() {
 				LOGGER.debug("Start sync from genesis check.");
 				boolean canBootstrap = Settings.getInstance().getBootstrap();
-				boolean needsArchiveRebuild = false;
-				int checkHeight = 0;
-				Repository repository = null;
+				boolean needsArchiveRebuild;
+				int checkHeight;
+				Repository repository;
 
 				try {
 					repository = RepositoryManager.getRepository();
@@ -669,7 +666,7 @@ public class Controller extends Thread {
 					int index = new SecureRandom().nextInt(seeds.size());
 					String syncNode = String.valueOf(seeds.get(index));
 					PeerAddress peerAddress = PeerAddress.fromString(syncNode);
-					InetSocketAddress resolvedAddress = null;
+					InetSocketAddress resolvedAddress;
 
 					try {
 						resolvedAddress = peerAddress.toSocketAddress();
@@ -742,7 +739,7 @@ public class Controller extends Thread {
 						ntpCheckTimestamp = now + NTP_POST_SYNC_CHECK_PERIOD;
 						requestSysTrayUpdate = true;
 					} else {
-						LOGGER.info(String.format("No NTP offset yet"));
+						LOGGER.info("No NTP offset yet");
 						ntpCheckTimestamp = now + NTP_PRE_SYNC_CHECK_PERIOD;
 						// We can't do much without a valid NTP time
 						continue;
@@ -1024,9 +1021,7 @@ public class Controller extends Thread {
 		tooltip = tooltip.concat(String.format("\n%s: %s", Translator.INSTANCE.translate("SysTray", "BUILD_VERSION"), this.buildVersion));
 		SysTray.getInstance().setToolTipText(tooltip);
 
-		this.callbackExecutor.execute(() -> {
-			EventBus.INSTANCE.notify(new StatusChangeEvent());
-		});
+		this.callbackExecutor.execute(() -> EventBus.INSTANCE.notify(new StatusChangeEvent()));
 	}
 
 	public void deleteExpiredTransactions() {
@@ -1286,7 +1281,7 @@ public class Controller extends Thread {
 
 		synchronized (this.latestBlocks) {
 			BlockData cachedChainTip = this.latestBlocks.pollLast();
-			boolean refillNeeded = false;
+			boolean refillNeeded;
 
 			if (cachedChainTip != null && Arrays.equals(cachedChainTip.getReference(), blockDataCopy.getSignature())) {
 				// Chain tip was parent for new latest block that has been orphaned, so we're good
@@ -1350,7 +1345,7 @@ public class Controller extends Thread {
 	public void onNewTransaction(TransactionData transactionData) {
 		this.callbackExecutor.execute(() -> {
 			// Notify all peers
-			Message newTransactionSignatureMessage = new TransactionSignaturesMessage(Arrays.asList(transactionData.getSignature()));
+			Message newTransactionSignatureMessage = new TransactionSignaturesMessage(Collections.singletonList(transactionData.getSignature()));
 			Network.getInstance().broadcast(broadcastPeer -> newTransactionSignatureMessage);
 
 			// Notify listeners
@@ -1649,7 +1644,7 @@ public class Controller extends Thread {
 			return;
 		}
 
-		List<BlockSummaryData> blockSummaries = new ArrayList<>();
+		List<BlockSummaryData> blockSummaries;
 
 		// Attempt to serve from our cache of latest blocks
 		synchronized (this.latestBlocks) {
@@ -1723,7 +1718,7 @@ public class Controller extends Thread {
 			return;
 		}
 
-		List<byte[]> signatures = new ArrayList<>();
+		List<byte[]> signatures;
 
 		// Attempt to serve from our cache of latest blocks
 		synchronized (this.latestBlocks) {
@@ -2003,7 +1998,7 @@ public class Controller extends Thread {
 				return;
 			}
 
-			NamesMessage namesMessage = new NamesMessage(Arrays.asList(nameData));
+			NamesMessage namesMessage = new NamesMessage(List.of(nameData));
 			namesMessage.setId(message.getId());
 
 			if (!peer.sendMessage(namesMessage)) {

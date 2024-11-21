@@ -48,7 +48,7 @@ public enum Handshake {
 
 			String versionString = helloMessage.getVersionString();
 
-			Matcher matcher = peer.VERSION_PATTERN.matcher(versionString);
+			Matcher matcher = Peer.VERSION_PATTERN.matcher(versionString);
 			if (!matcher.lookingAt()) {
 				LOGGER.debug(() -> String.format("Peer %s sent invalid HELLO version string '%s'", peer, versionString));
 				return null;
@@ -275,7 +275,7 @@ public enum Handshake {
 
 	public final MessageType expectedMessageType;
 
-	private Handshake(MessageType expectedMessageType) {
+	Handshake(MessageType expectedMessageType) {
 		this.expectedMessageType = expectedMessageType;
 	}
 

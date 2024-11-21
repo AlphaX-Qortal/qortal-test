@@ -16,8 +16,7 @@ import java.util.List;
 public class ArbitrarySignaturesMessage extends Message {
 
 	private String peerAddress;
-	private int requestHops;
-	private List<byte[]> signatures;
+    private List<byte[]> signatures;
 
 	public ArbitrarySignaturesMessage(String peerAddress, int requestHops, List<byte[]> signatures) {
 		super(MessageType.ARBITRARY_SIGNATURES);
@@ -45,8 +44,7 @@ public class ArbitrarySignaturesMessage extends Message {
 		super(id, MessageType.ARBITRARY_SIGNATURES);
 
 		this.peerAddress = peerAddress;
-		this.requestHops = requestHops;
-		this.signatures = signatures;
+        this.signatures = signatures;
 	}
 
 	public String getPeerAddress() {

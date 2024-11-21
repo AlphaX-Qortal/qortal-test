@@ -1,6 +1,5 @@
 package org.qortal.network.message;
 
-@SuppressWarnings("serial")
 public class MessageException extends Exception {
     public MessageException() {
     }

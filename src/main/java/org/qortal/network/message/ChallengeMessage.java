@@ -1,6 +1,6 @@
 package org.qortal.network.message;
 
-import org.qortal.transform.Transformer;
+import org.qortal.utils.Serialization;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -46,8 +46,7 @@ public class ChallengeMessage extends Message {
 	}
 
 	public static Message fromByteBuffer(int id, ByteBuffer byteBuffer)  {
-		byte[] publicKey = new byte[Transformer.PUBLIC_KEY_LENGTH];
-		byteBuffer.get(publicKey);
+        byte[] publicKey = Serialization.deserializePublicKey(byteBuffer);
 
 		byte[] challenge = new byte[CHALLENGE_LENGTH];
 		byteBuffer.get(challenge);

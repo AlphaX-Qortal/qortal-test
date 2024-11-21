@@ -40,4 +40,12 @@ public class CachedBlockV2Message extends Message implements Cloneable {
 		throw new UnsupportedOperationException("CachedBlockMessageV2 is for outgoing messages only");
 	}
 
+    @Override
+    public CachedBlockV2Message clone() {
+        try {
+            return (CachedBlockV2Message) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
+    }
 }

@@ -80,7 +80,7 @@ public class OnlineAccountsManager {
     // IMPORTANT: if we ever need to dynamically modify the buffer size using a feature trigger, the
     // pre-allocated buffer below will NOT work, and we should instead use a dynamically allocated
     // one for the transition period.
-    private static long[] POW_VERIFY_WORK_BUFFER = new long[getPoWBufferSize() / 8];
+    private static final long[] POW_VERIFY_WORK_BUFFER = new long[getPoWBufferSize() / 8];
 
     private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(4, new NamedThreadFactory("OnlineAccounts"));
     private volatile boolean isStopping = false;
@@ -236,7 +236,7 @@ public class OnlineAccountsManager {
                     continue;
                 }
 
-                boolean isValid = this.isValidCurrentAccount(repository, onlineAccountData);
+                boolean isValid = isValidCurrentAccount(repository, onlineAccountData);
                 if (isValid)
                     onlineAccountsToAdd.add(onlineAccountData);
 
@@ -292,13 +292,10 @@ public class OnlineAccountsManager {
             return false;
         }
 
-        if (existingOnlineAccountData.getNonce() == null || existingOnlineAccountData.getNonce() < 0) {
-            // Existing data has no usable nonce value(s) so we want to replace it with the new one
-            return true;
-        }
+        // Existing data has no usable nonce value(s) so we want to replace it with the new one
+        return existingOnlineAccountData.getNonce() == null || existingOnlineAccountData.getNonce() < 0;
 
         // Both new and old data have nonce values so the new data isn't considered superior
-        return false;
     }
 
 
@@ -399,15 +396,18 @@ public class OnlineAccountsManager {
 
                 currentOnlineAccountsHashes.computeIfAbsent(timestamp, k -> new ConcurrentHashMap<>()).put(leadingByte, pubkeyHash);
 
-                LOGGER.trace(() -> String.format("Rebuilt hash %s for timestamp %d and leading byte %02x using %d public keys",
-                        HashCode.fromBytes(pubkeyHash),
-                        timestamp,
-                        leadingByte,
-                        currentOnlineAccounts.get(timestamp).stream()
-                                .map(OnlineAccountData::getPublicKey)
-                                .filter(publicKey -> leadingByte == publicKey[0])
-                                .count()
-                ));
+                LOGGER.trace(() -> {
+                    assert pubkeyHash != null;
+                    return String.format("Rebuilt hash %s for timestamp %d and leading byte %02x using %d public keys",
+                            HashCode.fromBytes(pubkeyHash),
+                            timestamp,
+                            leadingByte,
+                            currentOnlineAccounts.get(timestamp).stream()
+                                    .map(OnlineAccountData::getPublicKey)
+                                    .filter(publicKey -> leadingByte == publicKey[0])
+                                    .count()
+                    );
+                });
             }
         }
 
@@ -425,7 +425,7 @@ public class OnlineAccountsManager {
         boolean isSuperiorEntry = isOnlineAccountsDataSuperior(onlineAccountData);
         if (isSuperiorEntry)
             // Remove existing inferior entry so it can be re-added below (it's likely the existing copy is missing a nonce value)
-            onlineAccounts.removeIf(a -> Objects.equals(a.getPublicKey(), onlineAccountData.getPublicKey()));
+            onlineAccounts.removeIf(a -> Arrays.equals(a.getPublicKey(), onlineAccountData.getPublicKey()));
 
         boolean isNewEntry = onlineAccounts.add(onlineAccountData);
 

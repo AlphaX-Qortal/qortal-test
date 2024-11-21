@@ -4,6 +4,7 @@ import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import org.qortal.data.network.OnlineAccountData;
 import org.qortal.transform.Transformer;
+import org.qortal.utils.Serialization;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -95,8 +96,7 @@ public class OnlineAccountsV3Message extends Message {
 				byte[] signature = new byte[Transformer.SIGNATURE_LENGTH];
 				bytes.get(signature);
 
-				byte[] publicKey = new byte[Transformer.PUBLIC_KEY_LENGTH];
-				bytes.get(publicKey);
+                byte[] publicKey = Serialization.deserializePublicKey(bytes);
 
 				// Nonce is optional - will be -1 if missing
 				// ... but we should skip/ignore an online account if it has no nonce
